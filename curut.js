@@ -1,15 +1,12 @@
 import fetch from 'node-fetch';
 import fs from 'fs';
 import readline from 'readline-sync';
-import url from 'url';
 
-// Fungsi untuk membaca file dan mendapatkan data token
 function getToken(filename) {
     const data = fs.readFileSync(filename, 'utf8');
     return data.split('\n').map(line => line.trim()).filter(line => line.length > 0);
 }
 
-// Fungsi untuk melakukan permintaan HTTP menggunakan fetch
 async function getCURL(url, method = 'GET', headers = {}, body = null, returnJson = true) {
     const options = {
         method,
@@ -31,40 +28,31 @@ function numberFormat(number, decimals = 0, decPoint = ',', thousandsSep = '.') 
     const parts = n.split('.');
     parts[0] = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, thousandsSep);
     return parts.join(decPoint);
-    // return parts[0];
 }
 
-// Fungsi untuk memformat data yang akan digunakan
 function getFormattedData(numberString) {
-    const parts = numberString.split('.'); // Memisahkan berdasarkan titik
+    const parts = numberString.split('.'); 
 
-    // Hitung total jumlah karakter angka
-    const totalDigits = parts.join('').length; // Menggabungkan semua bagian untuk menghitung total digit
+    const totalDigits = parts.join('').length; 
 
     if (parts[0].length > 3) {
         if (totalDigits > 12) {
-            // Gabungkan parts[0] dan parts[1] jika total lebih dari 12 angka
             return parseFloat(parts[0] + '.' + parts[1]);
         } else {
-            // Jika kurang dari 12 digit, hanya ambil parts[0]
             return parseFloat(parts[0]);
         }
     } else if (parts[0].length === 1 && parts.length > 1) {
-        // Jika bagian pertama hanya 1 angka, gabungkan dengan bagian kedua
         return parseFloat(parts[0] + '.' + parts[1]);
     } else {
-        // Jika bagian pertama lebih dari 1 angka, cukup ambil dua bagian pertama
         return parseFloat(parts.slice(0, 2).join('.'));
     }
 }
 
-// Inisialisasi variabel akumulator di luar loop
 let totalAirdrop = 0;
 let totalClaimed = 0;
 let totalNextUnlocked = 0;
 let totalUnclaimed = 0;
 
-// Fungsi utama untuk menjalankan proses
 (async () => {
     const dataList = getToken('query.txt');
     
@@ -74,7 +62,7 @@ let totalUnclaimed = 0;
     console.log(`-------------------------------`);
     console.log();
 
-    console.log('\n[.] MENJALANKAN AUTO CEK TOKEN, DENGAN DATA REFF ' + dataList.length + ' AKUN...');
+    console.log('\n[.] MENJALANKAN AUTO CEK TOKEN, PADA ' + dataList.length + ' AKUN...');
     
 
     console.log();
@@ -111,16 +99,13 @@ let totalUnclaimed = 0;
                     if (asyc.interludeUser != null) {
                         const { total , claimed, nextUnlocked, unclaimed } = asyc.interludeUser.tokenBalance;
                         
-
                         const totals = getFormattedData(numberFormat(total));
                         const claimeds = getFormattedData(numberFormat(claimed));
                         const nextUnlockeds = getFormattedData(numberFormat(nextUnlocked));
                         const unclaimeds = getFormattedData(numberFormat(unclaimed));
 
-                        
-
                         logMessage += `  |-> AIRDROP TOKEN DISTRI INFO:\n  |-> TOTAL: ${numberFormat(totals)} $HMSTR | CLAIMED: ${numberFormat(claimeds)} $HMSTR | NEXT UNLOCK: ${numberFormat(nextUnlockeds)} $HMSTR | UNCLAIMED: ${numberFormat(unclaimeds)} $HMSTR\n`;
-                        // // Tambahkan ke variabel akumulator, pastikan penambahan dilakukan dengan angka
+
                         totalAirdrop += totals;
                         totalClaimed += claimeds;
                         totalNextUnlocked += nextUnlockeds;
@@ -136,12 +121,9 @@ let totalUnclaimed = 0;
             console.log(logMessage);
         });
 
-        // Tunggu hingga semua promises di batch selesai
         await Promise.all(batchPromises);
     }
-    // Tampilkan total keseluruhan setelah loop selesai
     console.log(`===== TOTAL KESELURUHAN =====`);
-    // console.log(`Total Airdrop: ${getFormattedData(numberFormat(totalAirdrop))} $HMSTR`);
     console.log(`Total Airdrop: ${numberFormat(totalAirdrop)} $HMSTR`);
     console.log(`Total Claimed: ${numberFormat(totalClaimed)} $HMSTR`);
     console.log(`Total Next Unlocked: ${numberFormat(totalNextUnlocked)} $HMSTR`);
